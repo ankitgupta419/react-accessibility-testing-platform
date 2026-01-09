@@ -1,0 +1,174 @@
+---
+description: React component conventions that enforce global accessibility rules
+globs:
+  - "**/*.jsx"
+  - "**/*.tsx"
+alwaysApply: true
+---
+
+# React Component Conventions (Global)
+
+These conventions are derived from the React Accessibility guidance in [React Accessibility](https://legacy.reactjs.org/docs/accessibility.html) and the global rules in `.cursor/rules/accessibility.mdc`. They apply to all components and are not domain-specific.
+
+## Creation Checklist (must-haves)
+1. Semantic elements first; avoid div/span for interactive needs.
+2. Keyboard operable (Tab/Shift+Tab traversal; Enter/Space activation).
+3. Preserve visible focus outlines or provide custom focus indicators.
+4. Provide accessible names: labels or `aria-label`/`aria-labelledby`.
+5. Use ARIA to enhance native semantics (kebab-case `aria-*` in JSX).
+6. Provide `aria-live` for dynamic updates; `role="alert"` for critical errors.
+7. Meet WCAG 2.1 AA color contrast, including focus states.
+8. Test with keyboard + at least one screen reader pass.
+
+## Reference Component Skeleton
+```jsx
+import React from 'react';
+
+/**
+ * ComponentName - Brief description
+ * Accessibility notes:
+ * - Keyboard navigable: yes/no
+ * - Screen reader friendly: yes/no
+ * - ARIA attributes: list specifics
+ */
+function ComponentName({ ariaLabel, className = '', children, ...props }) {
+  return (
+    <section
+      role="region"
+      aria-label={ariaLabel}
+      className={`component-name ${className}`}
+      {...props}
+    >
+      {children}
+    </section>
+  );
+}
+
+export default ComponentName;
+```
+
+## Accessible Button Pattern
+```jsx
+import React from 'react';
+
+function AccessibleButton({
+  onClick,
+  disabled = false,
+  ariaLabel,
+  type = 'button',
+  className = '',
+  children,
+  ...props
+}) {
+  const handleKeyDown = (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && !disabled) {
+      e.preventDefault();
+      onClick?.(e);
+    }
+  };
+
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      aria-disabled={disabled}
+      className={`accessible-button ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+export default AccessibleButton;
+```
+
+## Status / Live Message Pattern
+```jsx
+import React from 'react';
+
+function StatusMessage({
+  message,
+  live = 'polite', // 'polite' | 'assertive'
+  role = live === 'assertive' ? 'alert' : 'status',
+  atomic = true,
+  className = '',
+}) {
+  if (!message) return null;
+  return (
+    <div
+      role={role}
+      aria-live={live}
+      aria-atomic={atomic}
+      className={`status-message ${className}`}
+    >
+      {message}
+    </div>
+  );
+}
+
+export default StatusMessage;
+```
+
+## Focus and Keyboard Guidance
+- Keep DOM order matching visual order; avoid tabindex > 0.
+- Manage focus on mount/unmount for overlays/dialogs; return focus to trigger.
+- Provide skip links or landmark roles for fast navigation when pages are long.
+
+## Required Utility Classes
+```css
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+a:focus,
+[tabindex="0"]:focus {
+  outline: 3px solid #005fcc;
+  outline-offset: 2px;
+}
+
+button:disabled,
+button[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+```
+
+## Migration Checklist for Existing Components
+- Replace non-semantic wrappers with appropriate elements (`section`, `main`, `nav`, `button`, `fieldset/legend`, `ul/ol/li`).
+- Add accessible names: `label`/`htmlFor` for inputs; otherwise `aria-label` or `aria-labelledby`.
+- Keyboard support: ensure all interactive elements are focusable and operable with Enter/Space; keep focus order logical; restore focus after closing overlays.
+- Live regions: announce dynamic updates with `aria-live="polite"`; use `role="alert"` + `aria-live="assertive"` for errors/critical notices.
+- Focus visibility: ensure visible focus outline on all focusable elements.
+- Color/contrast: meet WCAG 2.1 AA (text 4.5:1; large text 3:1; focus/UI 3:1); do not rely on color alone.
+- Errors/validation: set `aria-invalid` where relevant and reference error text via `aria-describedby`; make errors live-announced.
+- Landmarks and headings: add `<main>`, `<nav>`, `<header>/<footer>` as appropriate; keep heading levels in order.
+
+## Anti-Patterns to Block
+- Removing focus outlines without replacement.
+- Click-only handlers on non-interactive elements without role + keyboard support.
+- Using placeholder as the only label.
+- Nesting headings out of order or skipping levels.
+- Using extra wrapper divs that break list/table semantics (prefer fragments).
+
+## Validation Checklist before PR
+- Keyboard-only traversal works for the component.
+- Screen reader announces names/roles/states for controls and dynamic updates.
+- Contrast checks pass for text, icons, and focus outlines.
+- Errors and important messages surface via `aria-live`/`role="alert"`.
+- Landmarks and headings provide clear navigation.

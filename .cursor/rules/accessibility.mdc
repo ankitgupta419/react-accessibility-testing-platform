@@ -1,0 +1,67 @@
+---
+description: Global accessibility rules aligned with React accessibility guidance
+globs:
+  - "**/*.jsx"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.ts"
+alwaysApply: true
+---
+
+# Accessibility Master Rules (Global)
+
+These rules codify the React accessibility guidance in [React Accessibility](https://legacy.reactjs.org/docs/accessibility.html) and WCAG 2.1 AA. They are framework-agnostic and apply to every component in this repository.
+
+## 1. Semantic HTML First
+- Prefer semantic elements: `<main>`, `<header>`, `<nav>`, `<section>`, `<article>`, `<aside>`, `<footer>`, `<ul>/<ol>/<li>`, `<form>`, `<fieldset>/<legend>`, `<button>`, `<label>`, `<input>`, `<textarea>`, `<select>`.
+- Do not use `<div>`/`<span>` for interactive behavior; use native controls or add correct roles + keyboard handlers when unavoidable.
+- Maintain a logical heading order without skipping levels.
+- Use React Fragments instead of extra wrapper `<div>`s when only grouping is needed (per React docs guidance on preserving semantics).
+
+## 2. Keyboard Accessibility
+- Every interactive control must be operable with keyboard only (Tab/Shift+Tab traversal; Enter/Space activation).
+- Preserve visible focus outlines; never remove without providing an equal or better custom focus indicator.
+- Manage focus when UI changes (e.g., modals, dynamic content); return focus to the trigger when closing overlays.
+- Ensure pointer-only actions have equivalent keyboard handlers.
+
+## 3. Forms and Labels
+- Every form control must have an accessible name: `<label htmlFor>` or `aria-label`/`aria-labelledby` when a visible label is not appropriate.
+- Group related controls with `<fieldset>` and `<legend>` where applicable.
+- Mark invalid fields with `aria-invalid="true"` and associate errors via `aria-describedby`.
+
+## 4. ARIA Usage
+- Use ARIA to enhance, not replace, semantics: prefer native elements first.
+- Keep `aria-*` attributes hyphenated (kebab-case) in JSX, per React docs.
+- Landmark roles: use `<main>`, `<nav>`, `<header>`, `<footer>`, `<aside>` (or `role` equivalents) to enable quick navigation.
+- Use `role="status"`/`role="alert"` with appropriate `aria-live` for dynamic messaging.
+
+## 5. Live Regions (Dynamic Updates)
+- Non-urgent updates: `aria-live="polite"` (e.g., status text).
+- Urgent/critical updates (errors, blocking issues): `aria-live="assertive"` with `role="alert"`.
+- Use `aria-atomic` when the entire region should be announced as one unit.
+
+## 6. Color and Contrast
+- Meet WCAG 2.1 AA: normal text 4.5:1, large text 3:1, UI/focus indicators 3:1.
+- Never rely on color alone to convey meaning; pair color with text/icon/state.
+- Ensure focus indicators remain high-contrast.
+
+## 7. Media and Images
+- All meaningful images/icons require `alt` text or `aria-label`; decorative images must use `alt=""` or `aria-hidden="true"`.
+
+## 8. Error Handling and Notifications
+- Errors and critical alerts: `role="alert"` + `aria-live="assertive"`.
+- Provide programmatic association between inputs and their errors (`aria-describedby`).
+
+## 9. Testing Expectations
+- Keyboard-only walkthrough (Tab/Shift+Tab/Enter/Space/Arrow keys where applicable).
+- Screen reader smoke test (NVDA/JAWS/VoiceOver) for key flows.
+- Contrast check for primary palettes and focus styles.
+- Verify focus order and focus return when components mount/unmount.
+
+## 10. Anti-Patterns to Avoid
+- Removing focus outlines without replacement.
+- Click handlers on non-interactive elements without role + keyboard support.
+- Using placeholder text as the only label.
+- Inserting extra wrapper `<div>`s that disrupt lists, tables, or headings when fragments suffice.
+
+Enforcement: These rules are mandatory. Code review must block violations until resolved.
